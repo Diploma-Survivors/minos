@@ -1,0 +1,12 @@
+tmp
+*.log
+certs
+logs
+.idea/
+gin.log
+.cursor/
+.env
+CLAUDE.md
+.vscode/
+.gocache
+bin/
