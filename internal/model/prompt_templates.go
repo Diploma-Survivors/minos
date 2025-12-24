@@ -10,15 +10,15 @@ import (
 // @Description Prompt template entity with versioning support
 type PromptTemplate struct {
 	ID          uint           `json:"id" gorm:"primaryKey"`
-	Name        string         `json:"name" gorm:"not null;type:text" example:"code-review-prompt"`
-	Version     string         `json:"version" gorm:"not null;type:text" example:"v1.0.0"`
-	Description string         `json:"description" gorm:"type:text" example:"Prompt for AI code review functionality"`
-	Content     string         `json:"content" gorm:"not null;type:text" example:"You are an expert code reviewer..."`
-	Variables   string         `json:"variables,omitempty" gorm:"type:text" example:"{\"language\": \"string\"}"`
-	IsActive    bool           `json:"is_active" gorm:"not null;default:true" example:"true"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
-	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index"`
+	Name        string         `json:"name" gorm:"not null;type:text"`
+	Version     string         `json:"version" gorm:"not null;type:text"`
+	Description string         `json:"description" gorm:"type:text"`
+	Content     string         `json:"content" gorm:"not null;type:text"`
+	Variables   string         `json:"variables,omitempty" gorm:"type:text"`
+	IsActive    bool           `json:"is_active" gorm:"not null;default:true"`
+	CreatedAt   time.Time      `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
+	DeletedAt   gorm.DeletedAt `json:"-" gorm:"index" gorm:"default:null"`
 }
 
 // TableName specifies the table name for the PromptTemplate model

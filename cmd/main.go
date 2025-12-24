@@ -22,6 +22,17 @@ import (
 	"minos/redis"
 )
 
+// @title           Minos API
+// @version         1.0
+// @description     Minos API
+// @termsOfService  http://swagger.io/terms/
+// @contact.name   API Support Team
+// @contact.url    http://www.example.com/support
+// @contact.email  support@example.com
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+// @BasePath /api/v1
+
 func main() {
 	app := fx.New(
 		fx.Provide(
@@ -70,7 +81,7 @@ func RegisterRoutes(
 	cfg *config.Config,
 	controller *controller.Controller,
 ) {
-	controller.RegisterRoutes(router)
+	controller.RegisterRoutes(router, cfg.Server.ApiPrefix)
 	logger.Init()
 
 	server := &http.Server{

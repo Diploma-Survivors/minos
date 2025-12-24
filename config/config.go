@@ -12,7 +12,8 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Port string
+	Port      string
+	ApiPrefix string
 }
 
 type DatabaseConfig struct {
@@ -46,6 +47,10 @@ func NewConfig() (*Config, error) {
 
 	var config Config
 	config.Server.Port = viper.GetString("SERVER_PORT")
+	config.Server.ApiPrefix = viper.GetString("API_PREFIX")
+	if config.Server.ApiPrefix == "" {
+		config.Server.ApiPrefix = "/api/v1"
+	}
 	config.Database.Host = viper.GetString("DATABASE_HOST")
 	config.Database.Port = viper.GetString("DATABASE_PORT")
 	config.Database.User = viper.GetString("DATABASE_USER")
