@@ -1,26 +1,83 @@
-basePath: /api/v1
 definitions:
-  dto.TodoCreate:
-    description: Todo creation request body
+  dto.PromptTemplateCreate:
+    description: Prompt template creation request body
     properties:
+      content:
+        description: The actual prompt content/template
+        example: You are an expert code reviewer...
+        type: string
       description:
-        description: Detailed description of the todo item
-        example: Write comprehensive documentation for the API endpoints
+        description: Description of what this prompt template does
+        example: Prompt for AI code review functionality
         type: string
-      status:
-        description: Current status of the todo item (pending, in-progress, completed)
-        enum:
-        - pending
-        - in-progress
-        - completed
-        example: pending
+      is_active:
+        description: Whether this template is active and can be used
+        example: true
+        type: boolean
+      name:
+        description: Name of the prompt template (unique per version)
+        example: code-review-prompt
         type: string
-      title:
-        description: Title of the todo item
-        example: Complete project documentation
+      variables:
+        description: JSON string defining expected variables (optional)
+        example: '{"language": "string", "code": "string"}'
+        type: string
+      version:
+        description: Version of the prompt template (semantic versioning recommended)
+        example: v1.0.0
         type: string
     required:
-    - title
+    - content
+    - name
+    - version
+    type: object
+  dto.PromptTemplateUpdate:
+    description: Prompt template update request body
+    properties:
+      content:
+        description: The actual prompt content/template
+        example: You are an expert code reviewer...
+        type: string
+      description:
+        description: Description of what this prompt template does
+        example: Updated prompt description
+        type: string
+      is_active:
+        description: Whether this template is active and can be used
+        example: false
+        type: boolean
+      variables:
+        description: JSON string defining expected variables
+        example: '{"language": "string", "code": "string"}'
+        type: string
+    type: object
+  model.PromptTemplate:
+    description: Prompt template entity with versioning support
+    properties:
+      content:
+        example: You are an expert code reviewer...
+        type: string
+      created_at:
+        type: string
+      description:
+        example: Prompt for AI code review functionality
+        type: string
+      id:
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      name:
+        example: code-review-prompt
+        type: string
+      updated_at:
+        type: string
+      variables:
+        example: '{"language": "string"}'
+        type: string
+      version:
+        example: v1.0.0
+        type: string
     type: object
   model.Response:
     properties:
@@ -28,53 +85,8 @@ definitions:
       message:
         type: string
     type: object
-  model.Todo:
-    description: Todo represents a single todo item with its details
-    properties:
-      created_at:
-        description: Timestamp when the todo was created
-        example: "2024-03-15T08:00:00Z"
-        type: string
-      description:
-        description: Detailed description of the todo item
-        example: Write comprehensive documentation for the API endpoints
-        type: string
-      id:
-        description: Unique identifier of the todo
-        example: 1
-        type: integer
-      status:
-        description: Current status of the todo item (pending, in-progress, completed)
-        enum:
-        - pending
-        - in-progress
-        - completed
-        example: pending
-        type: string
-      title:
-        description: Title of the todo item
-        example: Complete project documentation
-        type: string
-      updated_at:
-        description: Timestamp when the todo was last updated
-        example: "2024-03-15T08:00:00Z"
-        type: string
-    type: object
-host: localhost:8080
 info:
-  contact:
-    email: support@example.com
-    name: API Support Team
-    url: http://www.example.com/support
-  description: A modern RESTful API for managing your todos efficiently. This API
-    provides comprehensive endpoints for creating, reading, updating, and deleting
-    todo items.
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-  termsOfService: http://swagger.io/terms/
-  title: Todo List API
-  version: "1.0"
+  contact: {}
 paths:
   /health:
     get:
@@ -91,11 +103,24 @@ paths:
       summary: Show the status of server.
       tags:
       - health
-  /todos:
+  /prompts:
     get:
       consumes:
       - application/json
-      description: get all todos
+      description: Get all prompt templates with optional filters
+      parameters:
+      - description: Filter by template name
+        in: query
+        name: name
+        type: string
+      - description: Filter by template version
+        in: query
+        name: version
+        type: string
+      - description: Filter by active status
+        in: query
+        name: is_active
+        type: boolean
       produces:
       - application/json
       responses:
@@ -107,27 +132,27 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.Todo'
+                    $ref: '#/definitions/model.PromptTemplate'
                   type: array
               type: object
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.Response'
-      summary: Get all todos
+      summary: Get all prompt templates
       tags:
-      - todos
+      - prompts
     post:
       consumes:
       - application/json
-      description: create new todo
+      description: Create a new prompt template with versioning
       parameters:
-      - description: Create todo
+      - description: Create prompt template
         in: body
-        name: todo
+        name: prompt
         required: true
         schema:
-          $ref: '#/definitions/dto.TodoCreate'
+          $ref: '#/definitions/dto.PromptTemplateCreate'
       produces:
       - application/json
       responses:
@@ -138,26 +163,30 @@ paths:
             - $ref: '#/definitions/model.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/model.Todo'
+                  $ref: '#/definitions/model.PromptTemplate'
               type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/model.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.Response'
-      summary: Create a todo
+      summary: Create a prompt template
       tags:
-      - todos
-  /todos/{id}:
+      - prompts
+  /prompts/{id}:
     delete:
       consumes:
       - application/json
-      description: delete todo by ID
+      description: Delete a prompt template by ID (soft delete)
       parameters:
-      - description: Todo ID
+      - description: Prompt Template ID
         in: path
         name: id
         required: true
@@ -173,19 +202,23 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.Response'
-      summary: Delete a todo
+      summary: Delete a prompt template
       tags:
-      - todos
+      - prompts
     get:
       consumes:
       - application/json
-      description: get todo by ID
+      description: Get prompt template by ID
       parameters:
-      - description: Todo ID
+      - description: Prompt Template ID
         in: path
         name: id
         required: true
@@ -200,7 +233,7 @@ paths:
             - $ref: '#/definitions/model.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/model.Todo'
+                  $ref: '#/definitions/model.PromptTemplate'
               type: object
         "400":
           description: Bad Request
@@ -210,25 +243,26 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/model.Response'
-      summary: Get a todo
+      summary: Get a prompt template by ID
       tags:
-      - todos
+      - prompts
     put:
       consumes:
       - application/json
-      description: update todo by ID
+      description: Update an existing prompt template (name and version cannot be
+        changed)
       parameters:
-      - description: Todo ID
+      - description: Prompt Template ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Update todo
+      - description: Update prompt template
         in: body
-        name: todo
+        name: prompt
         required: true
         schema:
-          $ref: '#/definitions/dto.TodoCreate'
+          $ref: '#/definitions/dto.PromptTemplateUpdate'
       produces:
       - application/json
       responses:
@@ -239,34 +273,60 @@ paths:
             - $ref: '#/definitions/model.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/model.Todo'
+                  $ref: '#/definitions/model.PromptTemplate'
               type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/model.Response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/model.Response'
-      summary: Update a todo
+      summary: Update a prompt template
       tags:
-      - todos
-schemes:
-- http
-- https
-securityDefinitions:
-  Bearer:
-    description: 'Enter the token with the `Bearer: ` prefix, e.g. "Bearer abcde12345".'
-    in: header
-    name: Authorization
-    type: apiKey
+      - prompts
+  /prompts/by-name-version:
+    get:
+      consumes:
+      - application/json
+      description: Get prompt template by name and version combination
+      parameters:
+      - description: Template name
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Template version
+        in: query
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PromptTemplate'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Get a prompt template by name and version
+      tags:
+      - prompts
 swagger: "2.0"
-tags:
-- description: Operations about todos
-  externalDocs:
-    description: Detailed information about todo operations
-    url: http://example.com/docs/todos
-  name: todos
-- description: API health check operations
-  name: health

@@ -9,16 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "name": "API Support Team",
-            "url": "http://www.example.com/support",
-            "email": "support@example.com"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -47,9 +38,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/todos": {
+        "/prompts": {
             "get": {
-                "description": "get all todos",
+                "description": "Get all prompt templates with optional filters",
                 "consumes": [
                     "application/json"
                 ],
@@ -57,9 +48,29 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "todos"
+                    "prompts"
                 ],
-                "summary": "Get all todos",
+                "summary": "Get all prompt templates",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by template name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by template version",
+                        "name": "version",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by active status",
+                        "name": "is_active",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -74,7 +85,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.Todo"
+                                                "$ref": "#/definitions/model.PromptTemplate"
                                             }
                                         }
                                     }
@@ -91,7 +102,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "create new todo",
+                "description": "Create a new prompt template with versioning",
                 "consumes": [
                     "application/json"
                 ],
@@ -99,17 +110,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "todos"
+                    "prompts"
                 ],
-                "summary": "Create a todo",
+                "summary": "Create a prompt template",
                 "parameters": [
                     {
-                        "description": "Create todo",
-                        "name": "todo",
+                        "description": "Create prompt template",
+                        "name": "prompt",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.TodoCreate"
+                            "$ref": "#/definitions/dto.PromptTemplateCreate"
                         }
                     }
                 ],
@@ -125,7 +136,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Todo"
+                                            "$ref": "#/definitions/model.PromptTemplate"
                                         }
                                     }
                                 }
@@ -134,6 +145,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/model.Response"
                         }
@@ -147,9 +164,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/todos/{id}": {
+        "/prompts/by-name-version": {
             "get": {
-                "description": "get todo by ID",
+                "description": "Get prompt template by name and version combination",
                 "consumes": [
                     "application/json"
                 ],
@@ -157,13 +174,76 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "todos"
+                    "prompts"
                 ],
-                "summary": "Get a todo",
+                "summary": "Get a prompt template by name and version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Template name",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Template version",
+                        "name": "version",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PromptTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/prompts/{id}": {
+            "get": {
+                "description": "Get prompt template by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Get a prompt template by ID",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Todo ID",
+                        "description": "Prompt Template ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -181,7 +261,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Todo"
+                                            "$ref": "#/definitions/model.PromptTemplate"
                                         }
                                     }
                                 }
@@ -203,7 +283,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "update todo by ID",
+                "description": "Update an existing prompt template (name and version cannot be changed)",
                 "consumes": [
                     "application/json"
                 ],
@@ -211,24 +291,24 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "todos"
+                    "prompts"
                 ],
-                "summary": "Update a todo",
+                "summary": "Update a prompt template",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Todo ID",
+                        "description": "Prompt Template ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Update todo",
-                        "name": "todo",
+                        "description": "Update prompt template",
+                        "name": "prompt",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.TodoCreate"
+                            "$ref": "#/definitions/dto.PromptTemplateUpdate"
                         }
                     }
                 ],
@@ -244,7 +324,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.Todo"
+                                            "$ref": "#/definitions/model.PromptTemplate"
                                         }
                                     }
                                 }
@@ -253,6 +333,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/model.Response"
                         }
@@ -266,7 +352,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "delete todo by ID",
+                "description": "Delete a prompt template by ID (soft delete)",
                 "consumes": [
                     "application/json"
                 ],
@@ -274,13 +360,13 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "todos"
+                    "prompts"
                 ],
-                "summary": "Delete a todo",
+                "summary": "Delete a prompt template",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Todo ID",
+                        "description": "Prompt Template ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -299,6 +385,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/model.Response"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -310,32 +402,109 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.TodoCreate": {
-            "description": "Todo creation request body",
+        "dto.PromptTemplateCreate": {
+            "description": "Prompt template creation request body",
             "type": "object",
             "required": [
-                "title"
+                "content",
+                "name",
+                "version"
             ],
             "properties": {
+                "content": {
+                    "description": "The actual prompt content/template",
+                    "type": "string",
+                    "example": "You are an expert code reviewer..."
+                },
                 "description": {
-                    "description": "Detailed description of the todo item",
+                    "description": "Description of what this prompt template does",
                     "type": "string",
-                    "example": "Write comprehensive documentation for the API endpoints"
+                    "example": "Prompt for AI code review functionality"
                 },
-                "status": {
-                    "description": "Current status of the todo item (pending, in-progress, completed)",
-                    "type": "string",
-                    "enum": [
-                        "pending",
-                        "in-progress",
-                        "completed"
-                    ],
-                    "example": "pending"
+                "is_active": {
+                    "description": "Whether this template is active and can be used",
+                    "type": "boolean",
+                    "example": true
                 },
-                "title": {
-                    "description": "Title of the todo item",
+                "name": {
+                    "description": "Name of the prompt template (unique per version)",
                     "type": "string",
-                    "example": "Complete project documentation"
+                    "example": "code-review-prompt"
+                },
+                "variables": {
+                    "description": "JSON string defining expected variables (optional)",
+                    "type": "string",
+                    "example": "{\"language\": \"string\", \"code\": \"string\"}"
+                },
+                "version": {
+                    "description": "Version of the prompt template (semantic versioning recommended)",
+                    "type": "string",
+                    "example": "v1.0.0"
+                }
+            }
+        },
+        "dto.PromptTemplateUpdate": {
+            "description": "Prompt template update request body",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "The actual prompt content/template",
+                    "type": "string",
+                    "example": "You are an expert code reviewer..."
+                },
+                "description": {
+                    "description": "Description of what this prompt template does",
+                    "type": "string",
+                    "example": "Updated prompt description"
+                },
+                "is_active": {
+                    "description": "Whether this template is active and can be used",
+                    "type": "boolean",
+                    "example": false
+                },
+                "variables": {
+                    "description": "JSON string defining expected variables",
+                    "type": "string",
+                    "example": "{\"language\": \"string\", \"code\": \"string\"}"
+                }
+            }
+        },
+        "model.PromptTemplate": {
+            "description": "Prompt template entity with versioning support",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "You are an expert code reviewer..."
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Prompt for AI code review functionality"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "code-review-prompt"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "variables": {
+                    "type": "string",
+                    "example": "{\"language\": \"string\"}"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v1.0.0"
                 }
             }
         },
@@ -347,81 +516,18 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "model.Todo": {
-            "description": "Todo represents a single todo item with its details",
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "description": "Timestamp when the todo was created",
-                    "type": "string",
-                    "example": "2024-03-15T08:00:00Z"
-                },
-                "description": {
-                    "description": "Detailed description of the todo item",
-                    "type": "string",
-                    "example": "Write comprehensive documentation for the API endpoints"
-                },
-                "id": {
-                    "description": "Unique identifier of the todo",
-                    "type": "integer",
-                    "example": 1
-                },
-                "status": {
-                    "description": "Current status of the todo item (pending, in-progress, completed)",
-                    "type": "string",
-                    "enum": [
-                        "pending",
-                        "in-progress",
-                        "completed"
-                    ],
-                    "example": "pending"
-                },
-                "title": {
-                    "description": "Title of the todo item",
-                    "type": "string",
-                    "example": "Complete project documentation"
-                },
-                "updated_at": {
-                    "description": "Timestamp when the todo was last updated",
-                    "type": "string",
-                    "example": "2024-03-15T08:00:00Z"
-                }
-            }
         }
-    },
-    "securityDefinitions": {
-        "Bearer": {
-            "description": "Enter the token with the ` + "`" + `Bearer: ` + "`" + ` prefix, e.g. \"Bearer abcde12345\".",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
-        }
-    },
-    "tags": [
-        {
-            "description": "Operations about todos",
-            "name": "todos",
-            "externalDocs": {
-                "description": "Detailed information about todo operations",
-                "url": "http://example.com/docs/todos"
-            }
-        },
-        {
-            "description": "API health check operations",
-            "name": "health"
-        }
-    ]
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
-	Host:             "localhost:8080",
-	BasePath:         "/api/v1",
-	Schemes:          []string{"http", "https"},
-	Title:            "Todo List API",
-	Description:      "A modern RESTful API for managing your todos efficiently. This API provides comprehensive endpoints for creating, reading, updating, and deleting todo items.",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
+	Schemes:          []string{},
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

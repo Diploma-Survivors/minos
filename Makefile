@@ -3,7 +3,7 @@
 # Variables
 APP_NAME=minos
 MAIN_PATH=./cmd/main.go
-BINARY_NAME=bin/$(APP_NAME)
+BINARY_NAME=tmp/$(APP_NAME)
 DOCKER_COMPOSE=docker-compose
 SWAGGER_CMD=swag
 
@@ -12,6 +12,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make build          - Build the application binary"
 	@echo "  make run            - Run the application locally"
+	@echo "  make dev            - Run with live reload (Air)"
 	@echo "  make test           - Run tests"
 	@echo "  make test-coverage  - Run tests with coverage report"
 	@echo "  make clean          - Clean build artifacts"
@@ -47,6 +48,11 @@ run:
 	@echo "Running $(APP_NAME)..."
 	@go run $(MAIN_PATH)
 
+## dev: Run the application with live reload using Air
+dev:
+	@echo "Starting $(APP_NAME) with live reload..."
+	@air -c .air.toml
+
 ## test: Run all tests
 test:
 	@echo "Running tests..."
@@ -63,8 +69,8 @@ test-coverage:
 ## clean: Clean build artifacts and cache
 clean:
 	@echo "Cleaning build artifacts..."
-	@rm -rf bin/
-	@rm -f coverage.out coverage.html
+	@rm -rf bin/ tmp/
+	@rm -f coverage.out coverage.html build-errors.log
 	@go clean
 	@echo "✓ Clean complete"
 

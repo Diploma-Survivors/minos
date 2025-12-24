@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -26,13 +27,15 @@ func (c *Controller) RegisterRoutes(router *gin.Engine) {
 	router.GET("/health", c.HealthCheck)
 	v1 := router.Group("/api/v1")
 	{
-		todos := v1.Group("/todos")
+		// Prompt template routes
+		prompts := v1.Group("/prompts")
 		{
-			todos.GET("", c.GetAllTodos)
-			todos.GET("/:id", c.GetTodoByID)
-			todos.POST("", c.CreateTodo)
-			todos.PUT("/:id", c.UpdateTodo)
-			todos.DELETE("/:id", c.DeleteTodo)
+			prompts.GET("", c.GetAllPromptTemplates)
+			prompts.GET("/:id", c.GetPromptTemplateByID)
+			prompts.GET("/by-name-version", c.GetPromptTemplateByNameVersion)
+			prompts.POST("", c.CreatePromptTemplate)
+			prompts.PUT("/:id", c.UpdatePromptTemplate)
+			prompts.DELETE("/:id", c.DeletePromptTemplate)
 		}
 	}
 }
@@ -50,135 +53,190 @@ func (x *Controller) HealthCheck(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, model.NewResponse("OK", nil))
 }
 
-// GetAllTodos godoc
-// @Summary Get all todos
-// @Description get all todos
-// @Tags todos
+// ===== Prompt Template Handlers =====
+
+// GetAllPromptTemplates godoc
+// @Summary Get all prompt templates
+// @Description Get all prompt templates with optional filters
+// @Tags prompts
 // @Accept json
 // @Produce json
-// @Success 200 {object} model.Response{data=[]model.Todo}
+// @Param name query string false "Filter by template name"
+// @Param version query string false "Filter by template version"
+// @Param is_active query bool false "Filter by active status"
+// @Success 200 {object} model.Response{data=[]model.PromptTemplate}
 // @Failure 500 {object} model.Response
-// @Router /todos [get]
-func (c *Controller) GetAllTodos(ctx *gin.Context) {
-	todos, err := c.service.GetAllTodos()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to fetch todos", nil))
+// @Router /prompts [get]
+func (c *Controller) GetAllPromptTemplates(ctx *gin.Context) {
+	var query dto.PromptTemplateQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid query parameters", nil))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, model.NewResponse("Todos fetched successfully", todos))
+	templates, err := c.service.GetAllPromptTemplates(&query)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to fetch prompt templates")
+		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to fetch prompt templates", nil))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, model.NewResponse("Prompt templates fetched successfully", templates))
 }
 
-// GetTodoByID godoc
-// @Summary Get a todo
-// @Description get todo by ID
-// @Tags todos
+// GetPromptTemplateByID godoc
+// @Summary Get a prompt template by ID
+// @Description Get prompt template by ID
+// @Tags prompts
 // @Accept json
 // @Produce json
-// @Param id path int true "Todo ID"
-// @Success 200 {object} model.Response{data=model.Todo}
+// @Param id path int true "Prompt Template ID"
+// @Success 200 {object} model.Response{data=model.PromptTemplate}
 // @Failure 400 {object} model.Response
 // @Failure 404 {object} model.Response
-// @Router /todos/{id} [get]
-func (c *Controller) GetTodoByID(ctx *gin.Context) {
+// @Router /prompts/{id} [get]
+func (c *Controller) GetPromptTemplateByID(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid ID format", nil))
 		return
 	}
 
-	todo, err := c.service.GetTodoByID(uint(id))
+	template, err := c.service.GetPromptTemplateByID(uint(id))
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, model.NewResponse("Todo not found", nil))
+		log.Error().Err(err).Uint64("id", id).Msg("Failed to fetch prompt template")
+		ctx.JSON(http.StatusNotFound, model.NewResponse(err.Error(), nil))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, model.NewResponse("Todo fetched successfully", todo))
+	ctx.JSON(http.StatusOK, model.NewResponse("Prompt template fetched successfully", template))
 }
 
-// CreateTodo godoc
-// @Summary Create a todo
-// @Description create new todo
-// @Tags todos
+// GetPromptTemplateByNameVersion godoc
+// @Summary Get a prompt template by name and version
+// @Description Get prompt template by name and version combination
+// @Tags prompts
 // @Accept json
 // @Produce json
-// @Param todo body dto.TodoCreate true "Create todo"
-// @Success 201 {object} model.Response{data=model.Todo}
+// @Param name query string true "Template name"
+// @Param version query string true "Template version"
+// @Success 200 {object} model.Response{data=model.PromptTemplate}
 // @Failure 400 {object} model.Response
+// @Failure 404 {object} model.Response
+// @Router /prompts/by-name-version [get]
+func (c *Controller) GetPromptTemplateByNameVersion(ctx *gin.Context) {
+	name := ctx.Query("name")
+	version := ctx.Query("version")
+
+	if name == "" || version == "" {
+		ctx.JSON(http.StatusBadRequest, model.NewResponse("Both name and version parameters are required", nil))
+		return
+	}
+
+	template, err := c.service.GetPromptTemplateByNameVersion(name, version)
+	if err != nil {
+		log.Error().Err(err).Str("name", name).Str("version", version).Msg("Failed to fetch prompt template")
+		ctx.JSON(http.StatusNotFound, model.NewResponse(err.Error(), nil))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, model.NewResponse("Prompt template fetched successfully", template))
+}
+
+// CreatePromptTemplate godoc
+// @Summary Create a prompt template
+// @Description Create a new prompt template with versioning
+// @Tags prompts
+// @Accept json
+// @Produce json
+// @Param prompt body dto.PromptTemplateCreate true "Create prompt template"
+// @Success 201 {object} model.Response{data=model.PromptTemplate}
+// @Failure 400 {object} model.Response
+// @Failure 409 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /todos [post]
-func (c *Controller) CreateTodo(ctx *gin.Context) {
-	var input dto.TodoCreate
+// @Router /prompts [post]
+func (c *Controller) CreatePromptTemplate(ctx *gin.Context) {
+	var input dto.PromptTemplateCreate
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid input", nil))
 		return
 	}
 
-	todo, err := c.service.CreateTodo(&input)
+	template, err := c.service.CreatePromptTemplate(&input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to create todo", nil))
+		log.Error().Err(err).Interface("input", input).Msg("Failed to create prompt template")
+		// Check if it's a duplicate error
+		if err.Error() == fmt.Sprintf("prompt template with name '%s' and version '%s' already exists", input.Name, input.Version) {
+			ctx.JSON(http.StatusConflict, model.NewResponse(err.Error(), nil))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to create prompt template", nil))
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, model.NewResponse("Todo created successfully", todo))
+	ctx.JSON(http.StatusCreated, model.NewResponse("Prompt template created successfully", template))
 }
 
-// UpdateTodo godoc
-// @Summary Update a todo
-// @Description update todo by ID
-// @Tags todos
+// UpdatePromptTemplate godoc
+// @Summary Update a prompt template
+// @Description Update an existing prompt template (name and version cannot be changed)
+// @Tags prompts
 // @Accept json
 // @Produce json
-// @Param id path int true "Todo ID"
-// @Param todo body dto.TodoCreate true "Update todo"
-// @Success 200 {object} model.Response{data=model.Todo}
+// @Param id path int true "Prompt Template ID"
+// @Param prompt body dto.PromptTemplateUpdate true "Update prompt template"
+// @Success 200 {object} model.Response{data=model.PromptTemplate}
 // @Failure 400 {object} model.Response
+// @Failure 404 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /todos/{id} [put]
-func (c *Controller) UpdateTodo(ctx *gin.Context) {
+// @Router /prompts/{id} [put]
+func (c *Controller) UpdatePromptTemplate(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid ID format", nil))
 		return
 	}
 
-	var input dto.TodoCreate
+	var input dto.PromptTemplateUpdate
 	if err := ctx.ShouldBindJSON(&input); err != nil {
 		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid input", nil))
 		return
 	}
 
-	todo, err := c.service.UpdateTodo(uint(id), &input)
+	template, err := c.service.UpdatePromptTemplate(uint(id), &input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to update todo", nil))
+		log.Error().Err(err).Uint64("id", id).Msg("Failed to update prompt template")
+		ctx.JSON(http.StatusInternalServerError, model.NewResponse(err.Error(), nil))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, model.NewResponse("Todo updated successfully", todo))
+	ctx.JSON(http.StatusOK, model.NewResponse("Prompt template updated successfully", template))
 }
 
-// DeleteTodo godoc
-// @Summary Delete a todo
-// @Description delete todo by ID
-// @Tags todos
+// DeletePromptTemplate godoc
+// @Summary Delete a prompt template
+// @Description Delete a prompt template by ID (soft delete)
+// @Tags prompts
 // @Accept json
 // @Produce json
-// @Param id path int true "Todo ID"
+// @Param id path int true "Prompt Template ID"
 // @Success 200 {object} model.Response
 // @Failure 400 {object} model.Response
+// @Failure 404 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /todos/{id} [delete]
-func (c *Controller) DeleteTodo(ctx *gin.Context) {
+// @Router /prompts/{id} [delete]
+func (c *Controller) DeletePromptTemplate(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, model.NewResponse("Invalid ID format", nil))
 		return
 	}
 
-	if err := c.service.DeleteTodo(uint(id)); err != nil {
-		ctx.JSON(http.StatusInternalServerError, model.NewResponse("Failed to delete todo", nil))
+	if err := c.service.DeletePromptTemplate(uint(id)); err != nil {
+		log.Error().Err(err).Uint64("id", id).Msg("Failed to delete prompt template")
+		ctx.JSON(http.StatusInternalServerError, model.NewResponse(err.Error(), nil))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, model.NewResponse("Todo deleted successfully", nil))
+	ctx.JSON(http.StatusOK, model.NewResponse("Prompt template deleted successfully", nil))
 }

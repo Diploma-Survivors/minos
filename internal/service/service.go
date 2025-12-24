@@ -2,17 +2,22 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"minos/internal/dto"
 	"minos/internal/model"
 	"minos/internal/repository"
+
+	"gorm.io/gorm"
 )
 
 type Service interface {
-	CreateTodo(input *dto.TodoCreate) (*model.Todo, error)
-	GetAllTodos() ([]model.Todo, error)
-	GetTodoByID(id uint) (*model.Todo, error)
-	UpdateTodo(id uint, input *dto.TodoCreate) (*model.Todo, error)
-	DeleteTodo(id uint) error
+	// PromptTemplate methods
+	CreatePromptTemplate(input *dto.PromptTemplateCreate) (*model.PromptTemplate, error)
+	GetAllPromptTemplates(query *dto.PromptTemplateQuery) ([]model.PromptTemplate, error)
+	GetPromptTemplateByID(id uint) (*model.PromptTemplate, error)
+	GetPromptTemplateByNameVersion(name, version string) (*model.PromptTemplate, error)
+	UpdatePromptTemplate(id uint, input *dto.PromptTemplateUpdate) (*model.PromptTemplate, error)
+	DeletePromptTemplate(id uint) error
 }
 
 type service struct {
@@ -23,66 +28,111 @@ func NewService(repo repository.Repository) Service {
 	return &service{repo: repo}
 }
 
-func (s *service) CreateTodo(input *dto.TodoCreate) (*model.Todo, error) {
-	todo := &model.Todo{
-		Title:       input.Title,
+// PromptTemplate methods
+func (s *service) CreatePromptTemplate(input *dto.PromptTemplateCreate) (*model.PromptTemplate, error) {
+	// Check if template with same name and version already exists
+	existing, err := s.repo.FindPromptTemplateByNameVersion(input.Name, input.Version)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if existing != nil {
+		return nil, fmt.Errorf("prompt template with name '%s' and version '%s' already exists", input.Name, input.Version)
+	}
+
+	template := &model.PromptTemplate{
+		Name:        input.Name,
+		Version:     input.Version,
 		Description: input.Description,
-		Status:      input.Status,
+		Content:     input.Content,
+		Variables:   input.Variables,
+		IsActive:    input.IsActive,
 	}
 
-	if todo.Status == "" {
-		todo.Status = "pending"
+	// Default to active if not specified
+	if !input.IsActive {
+		template.IsActive = true
 	}
 
-	err := s.repo.Create(todo)
+	err = s.repo.CreatePromptTemplate(template)
 	if err != nil {
 		return nil, err
 	}
 
-	return todo, nil
+	return template, nil
 }
 
-func (s *service) GetAllTodos() ([]model.Todo, error) {
-	return s.repo.FindAll()
+func (s *service) GetAllPromptTemplates(query *dto.PromptTemplateQuery) ([]model.PromptTemplate, error) {
+	if query == nil {
+		query = &dto.PromptTemplateQuery{}
+	}
+	return s.repo.FindAllPromptTemplates(query.Name, query.Version, query.IsActive)
 }
 
-func (s *service) GetTodoByID(id uint) (*model.Todo, error) {
-	todo, err := s.repo.FindByID(id)
+func (s *service) GetPromptTemplateByID(id uint) (*model.PromptTemplate, error) {
+	template, err := s.repo.FindPromptTemplateByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("prompt template with id %d not found", id)
+		}
+		return nil, err
+	}
+	return template, nil
+}
+
+func (s *service) GetPromptTemplateByNameVersion(name, version string) (*model.PromptTemplate, error) {
+	template, err := s.repo.FindPromptTemplateByNameVersion(name, version)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("prompt template with name '%s' and version '%s' not found", name, version)
+		}
+		return nil, err
+	}
+	return template, nil
+}
+
+func (s *service) UpdatePromptTemplate(id uint, input *dto.PromptTemplateUpdate) (*model.PromptTemplate, error) {
+	template, err := s.repo.FindPromptTemplateByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("prompt template with id %d not found", id)
+		}
+		return nil, err
+	}
+
+	// Update only provided fields
+	if input.Description != nil {
+		template.Description = *input.Description
+	}
+	if input.Content != nil {
+		template.Content = *input.Content
+	}
+	if input.Variables != nil {
+		template.Variables = *input.Variables
+	}
+	if input.IsActive != nil {
+		template.IsActive = *input.IsActive
+	}
+
+	err = s.repo.UpdatePromptTemplate(template)
 	if err != nil {
 		return nil, err
 	}
-	return todo, nil
+
+	return template, nil
 }
 
-func (s *service) UpdateTodo(id uint, input *dto.TodoCreate) (*model.Todo, error) {
-	todo, err := s.repo.FindByID(id)
+func (s *service) DeletePromptTemplate(id uint) error {
+	template, err := s.repo.FindPromptTemplateByID(id)
 	if err != nil {
-		return nil, err
-	}
-
-	todo.Title = input.Title
-	todo.Description = input.Description
-	if input.Status != "" {
-		todo.Status = input.Status
-	}
-
-	err = s.repo.Update(todo)
-	if err != nil {
-		return nil, err
-	}
-
-	return todo, nil
-}
-
-func (s *service) DeleteTodo(id uint) error {
-	todo, err := s.repo.FindByID(id)
-	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("prompt template with id %d not found", id)
+		}
 		return err
 	}
 
-	if todo == nil {
-		return errors.New("todo not found")
+	if template == nil {
+		return fmt.Errorf("prompt template with id %d not found", id)
 	}
 
-	return s.repo.Delete(id)
+	return s.repo.DeletePromptTemplate(id)
 }

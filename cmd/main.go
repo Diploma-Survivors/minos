@@ -22,35 +22,6 @@ import (
 	"minos/redis"
 )
 
-// @title           Todo List API
-// @version         1.0
-// @description     A modern RESTful API for managing your todos efficiently. This API provides comprehensive endpoints for creating, reading, updating, and deleting todo items.
-// @termsOfService  http://swagger.io/terms/
-
-// @contact.name   API Support Team
-// @contact.url    http://www.example.com/support
-// @contact.email  support@example.com
-
-// @license.name  MIT
-// @license.url   https://opensource.org/licenses/MIT
-
-// @host      localhost:8080
-// @BasePath  /api/v1
-// @schemes   http https
-
-// @tag.name         todos
-// @tag.description  Operations about todos
-// @tag.docs.url     http://example.com/docs/todos
-// @tag.docs.description Detailed information about todo operations
-
-// @tag.name         health
-// @tag.description  API health check operations
-
-// @securityDefinitions.apikey Bearer
-// @in header
-// @name Authorization
-// @description Enter the token with the `Bearer: ` prefix, e.g. "Bearer abcde12345".
-
 func main() {
 	app := fx.New(
 		fx.Provide(
