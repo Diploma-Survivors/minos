@@ -19,6 +19,7 @@ import (
 	"minos/internal/logger"
 	"minos/internal/repository"
 	"minos/internal/service"
+	"minos/redis"
 )
 
 // @title           Todo List API
@@ -55,6 +56,7 @@ func main() {
 		fx.Provide(
 			NewConfig,
 			database.NewDB,
+			redis.NewRedis,
 			NewGinEngine,
 			repository.NewRepository,
 			service.NewService,

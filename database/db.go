@@ -26,7 +26,7 @@ func NewDB(cfg *config.Config) (*gorm.DB, error) {
 	// Auto migrate the schema
 	err = db.AutoMigrate(&model.Todo{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
 	return db, nil

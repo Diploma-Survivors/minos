@@ -17,7 +17,7 @@ type Todo struct {
 	Description string `json:"description" example:"Write comprehensive documentation for the API endpoints"`
 
 	// Current status of the todo item (pending, in-progress, completed)
-	Status string `json:"status" gorm:"default:pending" example:"pending" enums:"pending,in-progress,completed"`
+	Status string `json:"status" gorm:"type:varchar(50);default:pending" example:"pending" enums:"pending,in-progress,completed"`
 
 	// Timestamp when the todo was created
 	CreatedAt time.Time `json:"created_at" example:"2024-03-15T08:00:00Z"`

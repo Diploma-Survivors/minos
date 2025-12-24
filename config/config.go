@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
+	Redis    RedisConfig
 }
 
 type ServerConfig struct {
@@ -20,6 +21,13 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
+}
+
+type RedisConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
 }
 
 func NewConfig() (*Config, error) {
@@ -43,6 +51,10 @@ func NewConfig() (*Config, error) {
 	config.Database.User = viper.GetString("DATABASE_USER")
 	config.Database.Password = viper.GetString("DATABASE_PASSWORD")
 	config.Database.Name = viper.GetString("DATABASE_NAME")
+	config.Redis.Host = viper.GetString("REDIS_HOST")
+	config.Redis.Port = viper.GetString("REDIS_PORT")
+	config.Redis.Password = viper.GetString("REDIS_PASSWORD")
+	config.Redis.DB = viper.GetInt("REDIS_DB")
 
 	log.Info().Interface("config", config).Msg("Config loaded")
 	return &config, nil

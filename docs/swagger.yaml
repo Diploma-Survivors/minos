@@ -76,7 +76,22 @@ info:
   title: Todo List API
   version: "1.0"
 paths:
-  /api/v1/todos:
+  /health:
+    get:
+      consumes:
+      - '*/*'
+      description: get the status of server.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Show the status of server.
+      tags:
+      - health
+  /todos:
     get:
       consumes:
       - application/json
@@ -136,7 +151,7 @@ paths:
       summary: Create a todo
       tags:
       - todos
-  /api/v1/todos/{id}:
+  /todos/{id}:
     delete:
       consumes:
       - application/json
@@ -237,21 +252,6 @@ paths:
       summary: Update a todo
       tags:
       - todos
-  /health:
-    get:
-      consumes:
-      - '*/*'
-      description: get the status of server.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: Show the status of server.
-      tags:
-      - health
 schemes:
 - http
 - https

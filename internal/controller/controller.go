@@ -58,7 +58,7 @@ func (x *Controller) HealthCheck(ctx *gin.Context) {
 // @Produce json
 // @Success 200 {object} model.Response{data=[]model.Todo}
 // @Failure 500 {object} model.Response
-// @Router /api/v1/todos [get]
+// @Router /todos [get]
 func (c *Controller) GetAllTodos(ctx *gin.Context) {
 	todos, err := c.service.GetAllTodos()
 	if err != nil {
@@ -79,7 +79,7 @@ func (c *Controller) GetAllTodos(ctx *gin.Context) {
 // @Success 200 {object} model.Response{data=model.Todo}
 // @Failure 400 {object} model.Response
 // @Failure 404 {object} model.Response
-// @Router /api/v1/todos/{id} [get]
+// @Router /todos/{id} [get]
 func (c *Controller) GetTodoByID(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -106,7 +106,7 @@ func (c *Controller) GetTodoByID(ctx *gin.Context) {
 // @Success 201 {object} model.Response{data=model.Todo}
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /api/v1/todos [post]
+// @Router /todos [post]
 func (c *Controller) CreateTodo(ctx *gin.Context) {
 	var input dto.TodoCreate
 	if err := ctx.ShouldBindJSON(&input); err != nil {
@@ -134,7 +134,7 @@ func (c *Controller) CreateTodo(ctx *gin.Context) {
 // @Success 200 {object} model.Response{data=model.Todo}
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /api/v1/todos/{id} [put]
+// @Router /todos/{id} [put]
 func (c *Controller) UpdateTodo(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
@@ -167,7 +167,7 @@ func (c *Controller) UpdateTodo(ctx *gin.Context) {
 // @Success 200 {object} model.Response
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /api/v1/todos/{id} [delete]
+// @Router /todos/{id} [delete]
 func (c *Controller) DeleteTodo(ctx *gin.Context) {
 	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
 	if err != nil {
