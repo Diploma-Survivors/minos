@@ -1,5 +1,57 @@
 basePath: /api/v1
 definitions:
+  dto.PromptTemplateCreate:
+    description: Prompt template creation request body
+    properties:
+      content:
+        description: The actual prompt content/template
+        example: You are an expert code reviewer...
+        type: string
+      description:
+        description: Description of what this prompt template does
+        example: Prompt for AI code review functionality
+        type: string
+      is_active:
+        description: Whether this template is active and can be used
+        example: true
+        type: boolean
+      name:
+        description: Name of the prompt template (unique per version)
+        example: code-review-prompt
+        type: string
+      variables:
+        description: JSON string defining expected variables (optional)
+        example: '{"language": "string", "code": "string"}'
+        type: string
+      version:
+        description: Version of the prompt template (semantic versioning recommended)
+        example: v1.0.0
+        type: string
+    required:
+    - content
+    - name
+    - version
+    type: object
+  dto.PromptTemplateUpdate:
+    description: Prompt template update request body
+    properties:
+      content:
+        description: The actual prompt content/template
+        example: You are an expert code reviewer...
+        type: string
+      description:
+        description: Description of what this prompt template does
+        example: Updated prompt description
+        type: string
+      is_active:
+        description: Whether this template is active and can be used
+        example: false
+        type: boolean
+      variables:
+        description: JSON string defining expected variables
+        example: '{"language": "string", "code": "string"}'
+        type: string
+    type: object
   model.PromptTemplate:
     description: Prompt template entity with versioning support
     properties:
@@ -95,6 +147,44 @@ paths:
       summary: Get all prompt templates
       tags:
       - prompts
+    post:
+      consumes:
+      - application/json
+      description: Create a new prompt template with versioning
+      parameters:
+      - description: Create prompt template
+        in: body
+        name: prompt
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PromptTemplateCreate'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PromptTemplate'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Create a prompt template
+      tags:
+      - prompts
   /prompts/{id}:
     delete:
       consumes:
@@ -126,6 +216,122 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: Delete a prompt template
+      tags:
+      - prompts
+    get:
+      consumes:
+      - application/json
+      description: Get prompt template by ID
+      parameters:
+      - description: Prompt Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PromptTemplate'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Get a prompt template by ID
+      tags:
+      - prompts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing prompt template (name and version cannot be
+        changed)
+      parameters:
+      - description: Prompt Template ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update prompt template
+        in: body
+        name: prompt
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PromptTemplateUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PromptTemplate'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Update a prompt template
+      tags:
+      - prompts
+  /prompts/by-name-version:
+    get:
+      consumes:
+      - application/json
+      description: Get prompt template by name and version combination
+      parameters:
+      - description: Template name
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Template version
+        in: query
+        name: version
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.PromptTemplate'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: Get a prompt template by name and version
       tags:
       - prompts
 swagger: "2.0"

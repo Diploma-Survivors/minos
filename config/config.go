@@ -9,6 +9,7 @@ type Config struct {
 	Server   ServerConfig
 	Database DatabaseConfig
 	Redis    RedisConfig
+	Gemini   GeminiConfig
 }
 
 type ServerConfig struct {
@@ -29,6 +30,11 @@ type RedisConfig struct {
 	Port     string
 	Password string
 	DB       int
+}
+
+type GeminiConfig struct {
+	ApiKey string
+	Model  string
 }
 
 func NewConfig() (*Config, error) {
@@ -60,6 +66,8 @@ func NewConfig() (*Config, error) {
 	config.Redis.Port = viper.GetString("REDIS_PORT")
 	config.Redis.Password = viper.GetString("REDIS_PASSWORD")
 	config.Redis.DB = viper.GetInt("REDIS_DB")
+	config.Gemini.ApiKey = viper.GetString("GEMINI_API_KEY")
+	config.Gemini.Model = viper.GetString("GEMINI_MODEL")
 
 	log.Info().Interface("config", config).Msg("Config loaded")
 	return &config, nil

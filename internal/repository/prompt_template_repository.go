@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Repository interface {
+type PromptTemplateRepository interface {
 	// PromptTemplate methods
 	CreatePromptTemplate(template *model.PromptTemplate) error
 	FindAllPromptTemplates(name, version string, isActive *bool) ([]model.PromptTemplate, error)
@@ -16,20 +16,20 @@ type Repository interface {
 	DeletePromptTemplate(id uint) error
 }
 
-type repository struct {
+type promptTemplateRepository struct {
 	db *gorm.DB
 }
 
-func NewRepository(db *gorm.DB) Repository {
-	return &repository{db: db}
+func NewPromptTemplateRepository(db *gorm.DB) PromptTemplateRepository {
+	return &promptTemplateRepository{db: db}
 }
 
 // PromptTemplate methods
-func (r *repository) CreatePromptTemplate(template *model.PromptTemplate) error {
+func (r *promptTemplateRepository) CreatePromptTemplate(template *model.PromptTemplate) error {
 	return r.db.Create(template).Error
 }
 
-func (r *repository) FindAllPromptTemplates(name, version string, isActive *bool) ([]model.PromptTemplate, error) {
+func (r *promptTemplateRepository) FindAllPromptTemplates(name, version string, isActive *bool) ([]model.PromptTemplate, error) {
 	var templates []model.PromptTemplate
 	query := r.db.Model(&model.PromptTemplate{})
 
@@ -47,7 +47,7 @@ func (r *repository) FindAllPromptTemplates(name, version string, isActive *bool
 	return templates, err
 }
 
-func (r *repository) FindPromptTemplateByID(id uint) (*model.PromptTemplate, error) {
+func (r *promptTemplateRepository) FindPromptTemplateByID(id uint) (*model.PromptTemplate, error) {
 	var template model.PromptTemplate
 	err := r.db.First(&template, id).Error
 	if err != nil {
@@ -56,7 +56,7 @@ func (r *repository) FindPromptTemplateByID(id uint) (*model.PromptTemplate, err
 	return &template, nil
 }
 
-func (r *repository) FindPromptTemplateByNameVersion(name, version string) (*model.PromptTemplate, error) {
+func (r *promptTemplateRepository) FindPromptTemplateByNameVersion(name, version string) (*model.PromptTemplate, error) {
 	var template model.PromptTemplate
 	err := r.db.Where("name = ? AND version = ?", name, version).First(&template).Error
 	if err != nil {
@@ -65,10 +65,10 @@ func (r *repository) FindPromptTemplateByNameVersion(name, version string) (*mod
 	return &template, nil
 }
 
-func (r *repository) UpdatePromptTemplate(template *model.PromptTemplate) error {
+func (r *promptTemplateRepository) UpdatePromptTemplate(template *model.PromptTemplate) error {
 	return r.db.Save(template).Error
 }
 
-func (r *repository) DeletePromptTemplate(id uint) error {
+func (r *promptTemplateRepository) DeletePromptTemplate(id uint) error {
 	return r.db.Delete(&model.PromptTemplate{}, id).Error
 }

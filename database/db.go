@@ -29,7 +29,13 @@ func NewDB(cfg *config.Config) (*gorm.DB, error) {
 	}
 
 	// Auto migrate the schema
-	if err := db.AutoMigrate(&model.PromptTemplate{}); err != nil {
+	if err := db.AutoMigrate(
+		&model.PromptTemplate{},
+		&model.Interview{},
+		&model.Message{},
+		&model.Submission{},
+		&model.Evaluation{},
+	); err != nil {
 		return nil, fmt.Errorf("failed to auto migrate: %w", err)
 	}
 

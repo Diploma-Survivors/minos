@@ -102,9 +102,257 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create a new prompt template with versioning",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Create a prompt template",
+                "parameters": [
+                    {
+                        "description": "Create prompt template",
+                        "name": "prompt",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PromptTemplateCreate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PromptTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/prompts/by-name-version": {
+            "get": {
+                "description": "Get prompt template by name and version combination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Get a prompt template by name and version",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Template name",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Template version",
+                        "name": "version",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PromptTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
             }
         },
         "/prompts/{id}": {
+            "get": {
+                "description": "Get prompt template by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Get a prompt template by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Prompt Template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PromptTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing prompt template (name and version cannot be changed)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Update a prompt template",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Prompt Template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update prompt template",
+                        "name": "prompt",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.PromptTemplateUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.PromptTemplate"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.Response"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "description": "Delete a prompt template by ID (soft delete)",
                 "consumes": [
@@ -156,6 +404,73 @@
         }
     },
     "definitions": {
+        "dto.PromptTemplateCreate": {
+            "description": "Prompt template creation request body",
+            "type": "object",
+            "required": [
+                "content",
+                "name",
+                "version"
+            ],
+            "properties": {
+                "content": {
+                    "description": "The actual prompt content/template",
+                    "type": "string",
+                    "example": "You are an expert code reviewer..."
+                },
+                "description": {
+                    "description": "Description of what this prompt template does",
+                    "type": "string",
+                    "example": "Prompt for AI code review functionality"
+                },
+                "is_active": {
+                    "description": "Whether this template is active and can be used",
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "description": "Name of the prompt template (unique per version)",
+                    "type": "string",
+                    "example": "code-review-prompt"
+                },
+                "variables": {
+                    "description": "JSON string defining expected variables (optional)",
+                    "type": "string",
+                    "example": "{\"language\": \"string\", \"code\": \"string\"}"
+                },
+                "version": {
+                    "description": "Version of the prompt template (semantic versioning recommended)",
+                    "type": "string",
+                    "example": "v1.0.0"
+                }
+            }
+        },
+        "dto.PromptTemplateUpdate": {
+            "description": "Prompt template update request body",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "The actual prompt content/template",
+                    "type": "string",
+                    "example": "You are an expert code reviewer..."
+                },
+                "description": {
+                    "description": "Description of what this prompt template does",
+                    "type": "string",
+                    "example": "Updated prompt description"
+                },
+                "is_active": {
+                    "description": "Whether this template is active and can be used",
+                    "type": "boolean",
+                    "example": false
+                },
+                "variables": {
+                    "description": "JSON string defining expected variables",
+                    "type": "string",
+                    "example": "{\"language\": \"string\", \"code\": \"string\"}"
+                }
+            }
+        },
         "model.PromptTemplate": {
             "description": "Prompt template entity with versioning support",
             "type": "object",

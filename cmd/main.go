@@ -17,6 +17,7 @@ import (
 	_ "minos/docs" // This will be created by swag
 	"minos/internal/controller"
 	"minos/internal/logger"
+	"minos/internal/llm/gemini"
 	"minos/internal/repository"
 	"minos/internal/service"
 	"minos/redis"
@@ -40,8 +41,23 @@ func main() {
 			database.NewDB,
 			redis.NewRedis,
 			NewGinEngine,
-			repository.NewRepository,
-			service.NewService,
+			gemini.NewClient,
+			
+			// Repositories
+			repository.NewPromptTemplateRepository,
+			repository.NewInterviewRepository,
+			repository.NewMessageRepository,
+			repository.NewSubmissionRepository,
+			repository.NewEvaluationRepository,
+
+			// Services
+			service.NewService, // PromptTemplateService
+			service.NewInterviewService,
+			service.NewChatService,
+
+			// Controllers
+			controller.NewPromptTemplateController,
+			controller.NewInterviewController,
 			controller.NewController,
 		),
 		fx.Invoke(RegisterRoutes),

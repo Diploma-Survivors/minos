@@ -21,10 +21,10 @@ type Service interface {
 }
 
 type service struct {
-	repo repository.Repository
+	repo repository.PromptTemplateRepository
 }
 
-func NewService(repo repository.Repository) Service {
+func NewService(repo repository.PromptTemplateRepository) Service {
 	return &service{repo: repo}
 }
 
